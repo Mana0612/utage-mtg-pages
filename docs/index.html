@@ -1,228 +1,56 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
+<html lang="ja"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>リモラボ マーケ部 資料トップ</title>
+<title>LINE自動回答 資料</title>
 <style>
-  :root {
-    --bg: #f5f7fb;
-    --paper: #ffffff;
-    --ink: #1f2430;
-    --muted: #667085;
-    --line: #d9e0ea;
-    --navy: #172033;
-    --blue: #2563eb;
-    --green: #15803d;
-    --orange: #b45309;
-    --rose: #be123c;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
-    color: var(--ink);
-    background: var(--bg);
-    line-height: 1.75;
-  }
-  header {
-    background: var(--navy);
-    color: #fff;
-    padding: 42px 22px 34px;
-  }
-  .wrap {
-    max-width: 1080px;
-    margin: 0 auto;
-  }
-  .eyebrow {
-    margin: 0 0 8px;
-    color: #b8c2d3;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: .12em;
-  }
-  h1 {
-    margin: 0;
-    font-size: clamp(28px, 4vw, 42px);
-    letter-spacing: 0;
-    line-height: 1.22;
-  }
-  header p {
-    margin: 14px 0 0;
-    max-width: 760px;
-    color: #e6ebf3;
-    font-size: 15px;
-  }
-  main {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 26px 22px 58px;
-  }
-  .summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-  .summary-card {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 14px 16px;
-  }
-  .summary-card b {
-    display: block;
-    font-size: 18px;
-  }
-  .summary-card span {
-    color: var(--muted);
-    font-size: 12.5px;
-  }
-  section {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 20px;
-    margin: 16px 0;
-  }
-  h2 {
-    margin: 0 0 12px;
-    font-size: 19px;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-  .doc {
-    display: block;
-    min-height: 150px;
-    color: inherit;
-    text-decoration: none;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 15px;
-    background: #fff;
-    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
-  }
-  .doc:hover {
-    transform: translateY(-1px);
-    border-color: #b9c6da;
-    box-shadow: 0 8px 22px rgba(23, 32, 51, .08);
-  }
-  .tag {
-    display: inline-block;
-    color: #fff;
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 11px;
-    font-weight: 800;
-    margin-bottom: 9px;
-  }
-  .blue { background: var(--blue); }
-  .green { background: var(--green); }
-  .orange { background: var(--orange); }
-  .rose { background: var(--rose); }
-  .doc h3 {
-    margin: 0 0 7px;
-    font-size: 16px;
-    line-height: 1.42;
-  }
-  .doc p {
-    margin: 0;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .url {
-    display: block;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid #edf1f6;
-    color: #475467;
-    font-size: 12px;
-    word-break: break-all;
-  }
-  .note {
-    color: var(--muted);
-    font-size: 13px;
-    margin: -4px 0 14px;
-  }
-  footer {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 0 22px 34px;
-    color: var(--muted);
-    font-size: 12px;
-  }
-  @media (max-width: 760px) {
-    .summary, .grid { grid-template-columns: 1fr; }
-  }
-</style>
-</head>
+ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  font-family:-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;
+  background:linear-gradient(180deg,#0c0f22,#0f1226);color:#eef0ff}
+ .box{background:#171a35;border:1px solid #2c3160;border-radius:16px;padding:30px 28px;width:340px;max-width:90vw;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center}
+ .lock{font-size:34px}
+ h1{font-size:17px;margin:10px 0 4px}
+ p{font-size:12.5px;color:#a8adda;margin:0 0 18px}
+ input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #2c3160;background:#0f1226;color:#eef0ff;font-size:15px;box-sizing:border-box}
+ input:focus{outline:none;border-color:#4f8cff}
+ button{width:100%;margin-top:12px;padding:11px;border:none;border-radius:10px;background:#4f8cff;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+ button:hover{background:#3f7cf0}
+ .err{color:#ff8a8a;font-size:12.5px;margin-top:10px;min-height:16px}
+ .foot{color:#5b6090;font-size:11px;margin-top:16px}
+</style></head>
 <body>
-<header>
-  <div class="wrap">
-    <p class="eyebrow">REMOLABO MARKETING TEAM</p>
-    <h1>資料トップ</h1>
-    <p>UTAGE / LINE自動回答プロジェクトの説明資料をまとめた入口です。MTG時はこのページから各資料へ移動できます。</p>
-  </div>
-</header>
-
-<main>
-  <div class="summary">
-    <div class="summary-card"><b>5</b><span>公開資料</span></div>
-    <div class="summary-card"><b>GitHub Pages</b><span>docs配下から公開</span></div>
-    <div class="summary-card"><b>2026-06-28</b><span>目次更新日</span></div>
-  </div>
-
-  <section>
-    <h2>LINE自動回答</h2>
-    <p class="note">回答生成の考え方、判断フロー、DB構成を説明する資料です。</p>
-    <div class="grid">
-      <a class="doc" href="./auto-reply/decision-flow.html">
-        <span class="tag blue">FLOW</span>
-        <h3>回答生成の判断フロー</h3>
-        <p>30分ごとの取得、過去履歴を使った回答生成、短文判断、未返信/対応済み参考、人判断の改善ループを図解。</p>
-        <span class="url">/auto-reply/decision-flow.html</span>
-      </a>
-      <a class="doc" href="./auto-reply/mechanism.html">
-        <span class="tag green">MECHANISM</span>
-        <h3>LINE自動回答の仕組み</h3>
-        <p>論点分解、定型ナレッジ、声かけナレッジ、回答合成の全体像を説明。</p>
-        <span class="url">/auto-reply/mechanism.html</span>
-      </a>
-      <a class="doc" href="./mtg/20260626/db-roadmap.html">
-        <span class="tag orange">DB</span>
-        <h3>LINE自動回答システム DB説明と今後の展開</h3>
-        <p>DBに何を蓄積し、どのように判断シートや将来の改善につなげるかを整理。</p>
-        <span class="url">/mtg/20260626/db-roadmap.html</span>
-      </a>
-    </div>
-  </section>
-
-  <section>
-    <h2>UTAGE API / テスト運用</h2>
-    <p class="note">UTAGE APIの利用制限やテスト運用スケジュールに関する資料です。</p>
-    <div class="grid">
-      <a class="doc" href="./mtg/20260626/utage-api-schedule.html">
-        <span class="tag rose">MTG</span>
-        <h3>UTAGE API利用制限とテスト運用スケジュール</h3>
-        <p>API制限、テスト運用時の考え方、スケジュールを説明するMTG資料。</p>
-        <span class="url">/mtg/20260626/utage-api-schedule.html</span>
-      </a>
-      <a class="doc" href="./utage-api-limit-20260626.html">
-        <span class="tag blue">SHARE</span>
-        <h3>LINE自動回答 資料</h3>
-        <p>既存の共有用資料ページ。必要に応じてこちらも参照できます。</p>
-        <span class="url">/utage-api-limit-20260626.html</span>
-      </a>
-    </div>
-  </section>
-</main>
-
-<footer>
-  GitHub Pages: https://mana0612.github.io/utage-mtg-pages/
-</footer>
-</body>
-</html>
+<div class="box" id="gate">
+ <div class="lock">🔒</div>
+ <h1>LINE自動回答 資料</h1>
+ <p>このページはパスワードで保護されています</p>
+ <form id="f">
+   <input id="pw" type="password" placeholder="パスワードを入力" autocomplete="off" autofocus>
+   <button type="submit">表示する</button>
+ </form>
+ <div class="err" id="err"></div>
+ <div class="foot">ブラウザ内で復号されます（サーバーには送信されません）</div>
+</div>
+<script>
+const DATA = {"salt": "5/cj18vICzjxsvB7cclt2g==", "iv": "BN9CNNHUb6D8qcSQ", "ct": "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", "iter": 500000};
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decrypt(pw){
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    {name:"PBKDF2", salt:b64d(DATA.salt), iterations:DATA.iter, hash:"SHA-256"},
+    baseKey, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64d(DATA.iv)}, key, b64d(DATA.ct));
+  return new TextDecoder().decode(pt);
+}
+document.getElementById("f").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const err = document.getElementById("err");
+  err.textContent = "復号中…";
+  try{
+    const html = await decrypt(document.getElementById("pw").value);
+    document.open(); document.write(html); document.close();
+  }catch(_){ err.textContent = "パスワードが違います"; }
+});
+</script>
+</body></html>
