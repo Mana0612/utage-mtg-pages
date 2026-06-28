@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINE自動回答の仕組み｜リモラボ マーケ部</title>
+<style>
+  :root{
+    --navy:#1f3a64; --navy-light:#2e5694; --accent:#e8a13a;
+    --teikei:#2e7d6b; --koe:#b8557a; --ctx:#5566b5;
+    --ink:#1c2230; --sub:#5b6573; --line:#e3e7ee; --bg:#f5f7fb; --card:#fff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.8;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 22px 80px;}
+  header{background:linear-gradient(135deg,var(--navy),var(--navy-light));color:#fff;
+         padding:54px 22px 46px;text-align:center;}
+  header .eyebrow{letter-spacing:.18em;font-size:13px;opacity:.85;margin:0 0 10px;}
+  header h1{margin:0;font-size:30px;font-weight:800;letter-spacing:.01em;}
+  header p{margin:16px auto 0;max-width:620px;font-size:16px;opacity:.95;}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;
+          padding:30px 30px;margin:26px 0;box-shadow:0 2px 14px rgba(31,58,100,.05);}
+  h2{font-size:21px;margin:0 0 6px;color:var(--navy);display:flex;align-items:center;gap:10px;}
+  h2 .num{background:var(--navy);color:#fff;width:30px;height:30px;border-radius:50%;
+          display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 auto;}
+  .lead{color:var(--sub);margin:0 0 22px;font-size:15px;}
+  .big{font-size:18px;font-weight:700;}
+  /* 目的カード */
+  .goal{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .goal .box{border-radius:12px;padding:18px 20px;}
+  .goal .prob{background:#fcf0ef;border:1px solid #f3d3cf;}
+  .goal .sol{background:#eef6f2;border:1px solid #cfe7dc;}
+  .goal h3{margin:0 0 8px;font-size:15px;}
+  .goal .prob h3{color:#b84a3c;} .goal .sol h3{color:#1f7a5e;}
+  .goal ul{margin:0;padding-left:18px;font-size:14px;color:#444;}
+  /* フロー */
+  .flow{display:flex;flex-direction:column;gap:0;}
+  .step{display:flex;gap:16px;align-items:flex-start;}
+  .step .dot{flex:0 0 auto;width:40px;text-align:center;}
+  .step .dot .circle{width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;
+        display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;}
+  .step .bar{width:2px;background:var(--line);margin:4px auto 0;height:100%;min-height:18px;}
+  .step .body{flex:1;padding-bottom:20px;}
+  .step .body .t{font-weight:700;font-size:16px;}
+  .step .body .d{font-size:14px;color:var(--sub);margin-top:2px;}
+  .step:last-child .bar{display:none;}
+  .tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 9px;margin-right:6px;}
+  .tag.teikei{background:#e3f1ed;color:var(--teikei);}
+  .tag.koe{background:#f7e7ee;color:var(--koe);}
+  .tag.ctx{background:#e8eaf7;color:var(--ctx);}
+  .tag.human{background:#fdeedd;color:#b9791f;}
+  /* 二軸 */
+  .axes{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .axis{border-radius:12px;padding:20px;border:1px solid var(--line);}
+  .axis.a1{background:#f2faf7;border-color:#cfe7dc;}
+  .axis.a2{background:#fcf2f6;border-color:#f0d6e0;}
+  .axis h3{margin:0 0 6px;font-size:16px;}
+  .axis.a1 h3{color:var(--teikei);} .axis.a2 h3{color:var(--koe);}
+  .axis .ex{background:#fff;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13.5px;color:#444;border:1px dashed var(--line);}
+  /* 実例 */
+  .ex-msg{background:#f0f3f9;border-left:4px solid var(--navy-light);border-radius:8px;padding:14px 16px;font-size:14.5px;}
+  .ronten-list{display:flex;flex-direction:column;gap:10px;margin:16px 0;}
+  .ronten{display:flex;gap:12px;align-items:flex-start;background:#fafbfd;border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
+  .ronten .rn{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+       display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;}
+  .ronten .rt{font-size:14px;}
+  .ronten .src{font-size:12px;margin-top:4px;}
+  .merge-arrow{text-align:center;color:var(--navy-light);font-size:26px;margin:4px 0;}
+  .answer{background:linear-gradient(135deg,#fafdff,#eef4fb);border:1px solid #d6e2f2;border-radius:12px;
+          padding:18px 20px;font-size:14.5px;white-space:pre-wrap;}
+  .answer .label{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--navy);border-radius:6px;padding:3px 10px;margin-bottom:10px;}
+  /* シート列 */
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{background:#f0f3f9;color:var(--navy);font-size:13px;}
+  td .col{font-weight:700;}
+  /* ループ */
+  .loop{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center;}
+  .loop .lcard{background:#fafbfd;border:1px solid var(--line);border-radius:10px;padding:14px 10px;font-size:13px;}
+  .loop .lcard .ic{font-size:22px;}
+  .loop .lcard .lt{font-weight:700;margin-top:4px;font-size:13.5px;}
+  /* 数字 */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center;}
+  .stat{background:var(--navy);color:#fff;border-radius:12px;padding:18px 10px;}
+  .stat .n{font-size:26px;font-weight:800;}
+  .stat .l{font-size:12px;opacity:.85;margin-top:2px;}
+  .note{font-size:13px;color:var(--sub);background:#f7f9fc;border-radius:8px;padding:12px 14px;margin-top:14px;}
+  .cta{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;
+       border-radius:10px;padding:12px 22px;margin-top:8px;}
+  /* パイプライン（技術編） */
+  .pipe{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;}
+  .pnode{flex:1;min-width:150px;background:#fafbfd;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;}
+  .pnode .pt{font-weight:700;font-size:14px;margin-top:6px;}
+  .pnode .pd{font-size:12px;color:var(--sub);margin-top:3px;}
+  .parrow{align-self:center;color:var(--navy-light);font-weight:700;font-size:18px;}
+  .pe{display:inline-block;font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;}
+  .pe.codex{background:#e8eaf7;color:var(--ctx);} .pe.claude{background:#eef4fb;color:var(--navy);}
+  .pe.search{background:#fdeedd;color:#b9791f;} .pe.db{background:#e3f1ed;color:var(--teikei);}
+  .engtbl{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .eng{border-radius:10px;padding:14px 16px;font-size:13.5px;}
+  .eng .eh{font-weight:700;margin-bottom:4px;}
+  .eng.codex2{background:#eef0fa;border:1px solid #d6dbf2;color:#3a4690;}
+  .eng.claude2{background:#eef4fb;border:1px solid #d6e2f2;color:var(--navy);}
+  /* 判断 */
+  .judge{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .jcard{border-radius:12px;padding:18px;font-size:14px;}
+  .jcard .jh{font-weight:700;font-size:15px;margin-bottom:8px;}
+  .jcard.auto{background:#eef6f2;border:1px solid #cfe7dc;}
+  .jcard.human{background:#fdf3e8;border:1px solid #f0dcc0;}
+  .jcard ul{margin:8px 0 0;padding-left:18px;}
+  /* DBマップ */
+  .dbmap{display:flex;gap:18px;align-items:stretch;flex-wrap:wrap;}
+  .dbhub{flex:0 0 200px;background:linear-gradient(135deg,var(--navy),var(--navy-light));color:#fff;border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:center;text-align:center;}
+  .dbhub .dbt{font-weight:800;font-size:18px;} .dbhub .dbn{font-size:22px;font-weight:800;margin:6px 0;}
+  .dbhub .dbc{font-size:12px;opacity:.9;}
+  .dbcols{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;min-width:260px;}
+  .dbgroup .gl{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px;}
+  .dbbox{background:#fafbfd;border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:8px;font-size:13px;}
+  .dbbox b{display:block;} .dbbox span{font-size:11.5px;color:var(--sub);}
+  .dbbox.teikei{background:#f2faf7;border-color:#cfe7dc;} .dbbox.koe{background:#fcf2f6;border-color:#f0d6e0;}
+  @media(max-width:680px){.engtbl,.judge{grid-template-columns:1fr;}.dbcols{grid-template-columns:1fr;}}
+  footer{text-align:center;color:var(--sub);font-size:13px;margin-top:30px;}
+  @media(max-width:680px){.goal,.axes{grid-template-columns:1fr;}.loop,.stats{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">リモラボ マーケ部 ｜ LINE 自動回答プロジェクト</p>
+  <h1>AIは「論点を分解」してから返信を作る</h1>
+  <p>1通のメッセージを論点ごとに分け、それぞれに会社の正解ナレッジを当てて、最後に1つの返信に合成する。<br>新人でも、承認された良い回答からスタートできる仕組みです。</p>
+</header>
+
+<div class="wrap">
+
+  <!-- 1. なぜ -->
+  <section>
+    <h2><span class="num">1</span>なぜ作るのか</h2>
+    <p class="lead">同じ質問でも、対応する人によって回答が変わる。この「属人性・揺らぎ」をなくすのが目的です。</p>
+    <div class="goal">
+      <div class="box prob">
+        <h3>いまの課題</h3>
+        <ul>
+          <li>同じ質問でも担当者ごとに回答がバラつく</li>
+          <li>良い言い回しが個人の中に閉じている</li>
+          <li>新人は一から手探りで返信を作る</li>
+        </ul>
+      </div>
+      <div class="box sol">
+        <h3>このシステムで目指す状態</h3>
+        <ul>
+          <li>会社の正解ナレッジから<b>統一された良い回答</b>を生成</li>
+          <li>新人でも<b>承認済みの回答</b>を土台にできる</li>
+          <li>人は「確認・改善」に集中できる</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 仕組み -->
+  <section>
+    <h2><span class="num">2</span>仕組み（全体の流れ）</h2>
+    <p class="lead">いきなり返信文を書くのではなく、<b>5つのステップ</b>を踏みます。</p>
+    <div class="flow">
+      <div class="step">
+        <div class="dot"><span class="circle">1</span><div class="bar"></div></div>
+        <div class="body"><div class="t">問い合わせを受け取る</div>
+          <div class="d">LINEに届いた読者のメッセージ。</div></div>
+      </div>
+      <div class="step">
+        <div class="dot"><span class="circle">2</span><div class="bar"></div></div>
+        <div class="body"><div class="t">論点分解 — 「何を聞かれているか」に翻訳</div>
+          <div class="d">1通の中の論点を洗い出す。複数の質問が混ざっていれば複数に分ける。<br>
+          ＝シートの<b>「論点思考」列</b>がこれです。</div></div>
+      </div>
+      <div class="step">
+        <div class="dot"><span class="circle">3</span><div class="bar"></div></div>
+        <div class="body"><div class="t">論点ごとにナレッジを引く</div>
+          <div class="d">
+          <span class="tag teikei">定型</span>会社の公式テンプレ・正解の骨格<br>
+          <span class="tag teikei">過去回答</span>定型に無いものは過去の良い回答から検索（BM25）<br>
+          ＝シートの<b>「使ったナレッジ」列</b>に、引いた根拠が出ます。</div></div>
+      </div>
+      <div class="step">
+        <div class="dot"><span class="circle">4</span><div class="bar"></div></div>
+        <div class="body"><div class="t">本人の文脈と「声かけ」を足す</div>
+          <div class="d">
+          <span class="tag ctx">本人文脈</span>その人の過去のやりとりを踏まえる（既出の案内を繰り返さない 等）<br>
+          <span class="tag koe">声かけ</span>不安・タイプに合わせた一言で背中を押す</div></div>
+      </div>
+      <div class="step">
+        <div class="dot"><span class="circle">5</span></div>
+        <div class="body"><div class="t">1つの返信に合成する</div>
+          <div class="d">分解した論点すべてに答える、自然な1通を生成。＝シートの<b>「返信(AI案)」列</b>。<br>
+          <span class="tag human">人対応</span>過去と矛盾する等のイレギュラーは、AIが回答せず人にアラートします（安全弁）。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 実例 -->
+  <section>
+    <h2><span class="num">3</span>実例：1通に3つの論点が混ざっているケース</h2>
+    <p class="lead">「見送ります」という長文メッセージ。中には実は<b>3つの論点</b>が入っています。</p>
+    <div class="ex-msg">
+      「経理やデータ入力などの<b>バックオフィスをやりたい</b>者としてはあまりメリットを感じられない内容でした。
+      SNS運用や動画編集は単価を上げるイメージができますが、<b>事務系は長期契約が多く件数も大きく変動しない</b>のかなと。
+      実際は違うのかもしれませんが、<b>SNS運用などがメインのように感じました</b>。」
+    </div>
+
+    <div class="ronten-list">
+      <div class="ronten"><span class="rn">1</span><div>
+        <div class="rt">バックオフィス志望者にとって講座のメリットが感じにくかった点への対応</div>
+        <div class="src"><span class="tag teikei">過去回答</span>から引く</div></div></div>
+      <div class="ronten"><span class="rn">2</span><div>
+        <div class="rt">事務系は単価アップ・件数増のイメージが持ちにくいという認識への説明</div>
+        <div class="src"><span class="tag teikei">定型：案件獲得・収益化サポートの説明</span></div></div></div>
+      <div class="ronten"><span class="rn">3</span><div>
+        <div class="rt">SNS・動画編集がメインに見えるが、事務系にも合う内容か確認したい</div>
+        <div class="src"><span class="tag teikei">過去回答</span>から引く</div></div></div>
+    </div>
+
+    <div class="merge-arrow">▼ 3つの論点＋本人文脈＋声かけを合成 ▼</div>
+
+    <div class="answer">
+      <span class="label">AIが生成した返信</span>
+あつみさん、こんにちは😊　率直にお聞かせいただき、ありがとうございます✨
+
+実はリモラボはSNS運用や動画編集だけでなく、経理・データ入力などのバックオフィス分野でも案件獲得までサポートしています😌　あつみさんのように経理のご経験がある方は、むしろ強みを活かしやすい分野なんです。
+
+「事務系は長期契約だから単価が動きにくい」と感じられる方は多いのですが、実績の積み上げ方しだいで単価交渉や複数案件の同時受注につなげている方もいらっしゃいます。リモラボでは累計8,500名の実績データと専属コーチの6ヶ月伴走で、あつみさんに合った進め方を一緒に設計していけます🍀
+
+「事務系だと実際どうなのか」が気になる部分だけでも、いつでもお気軽にご質問ください😊
+    </div>
+    <div class="note">論点①②③のすべてに答えつつ、本人の経歴（経理経験）を踏まえ、最後に声かけで締めています。バラバラのナレッジが1つの自然な返信になっているのがポイントです。</div>
+  </section>
+
+  <!-- 4. 二軸 -->
+  <section>
+    <h2><span class="num">4</span>ナレッジは「二軸」でできている</h2>
+    <p class="lead">良い回答 ＝ <b>定型（何を答えるか）</b> ＋ <b>α（声かけ × 本人文脈）</b>。この2つを分けて持つのが核です。</p>
+    <div class="axes">
+      <div class="axis a1">
+        <h3>軸1：定型ナレッジ（正解の骨格）</h3>
+        <div>金額・流れ・URL・手順など「事実として何を答えるか」。会社の公式テンプレが正解データ。</div>
+        <div class="ex">例：「特典は当日参加＋アンケート回答が条件です」<br>「アンケートは事務局が再送します」</div>
+      </div>
+      <div class="axis a2">
+        <h3>軸2：声かけ（背中を押す一言）</h3>
+        <div>不安・タイプに合わせた一言。リモラボCSの強み＝差別化の核。本人文脈で個別化する。</div>
+        <div class="ex">例（収入の不安）：「実績の積み上げ方しだいで単価交渉につなげている方もいます」</div>
+      </div>
+    </div>
+    <div class="note">同じ「お金の不安」でも、<b>定型（事実）は統一</b>し、<b>声かけ（一言）はその人に合わせる</b>。だから揺らぎを消しつつ、機械的でない返信になります。</div>
+  </section>
+
+  <!-- 5. シートの見方 -->
+  <section>
+    <h2><span class="num">5</span>デモシートの見方</h2>
+    <p class="lead">各列が、上の仕組みのどこに対応しているか。</p>
+    <table>
+      <tr><th>列</th><th>意味</th></tr>
+      <tr><td><span class="col">メッセージ</span></td><td>読者から届いた問い合わせ（原文）</td></tr>
+      <tr><td><span class="col">カテゴリ</span></td><td>質問の分類</td></tr>
+      <tr><td><span class="col">論点思考</span></td><td><b>AIが読み取った論点</b>。複数なら「 / 」区切り。読み取りが正しいか人が一目で確認できる</td></tr>
+      <tr><td><span class="col">使ったナレッジ</span></td><td>各論点で引いた根拠（定型 / 過去回答）。何を元に答えたかの透明性</td></tr>
+      <tr><td><span class="col">返信(AI案)</span></td><td>合成された返信の案。<b>ここを人が見てOK / NGを判断</b></td></tr>
+      <tr><td><span class="col">自動回答OK / NG</span></td><td>そのまま使える＝OK ／ 直しが要る＝NG</td></tr>
+      <tr><td><span class="col">NG理由・背景</span></td><td>なぜダメか（情報が古い／論点漏れ／トーン 等）。ナレッジ改善のタネ</td></tr>
+      <tr><td><span class="col">実際の返信</span></td><td>最終的に送った文（人が記入）</td></tr>
+    </table>
+  </section>
+
+  <!-- 6. ループ -->
+  <section>
+    <h2><span class="num">6</span>現場の役割 ＝ ナレッジが育つループ</h2>
+    <p class="lead">AIに丸投げではありません。人のOK / NG判定が、そのままナレッジの改善になります。</p>
+    <div class="loop">
+      <div class="lcard"><div class="ic">🤖</div><div class="lt">AIが返信案を生成</div>論点分解→ナレッジ→合成</div>
+      <div class="lcard"><div class="ic">👀</div><div class="lt">人がOK / NG判定</div>使えるか確認</div>
+      <div class="lcard"><div class="ic">✍️</div><div class="lt">NGは理由を記入</div>何が足りないか</div>
+      <div class="lcard"><div class="ic">📚</div><div class="lt">ナレッジに反映</div>次から精度が上がる</div>
+    </div>
+    <div class="note">OKが増えるほど自動化が進み、NGの理由が溜まるほどナレッジが賢くなります。<b>承認した回答だけ</b>が手本として蓄積されます。</div>
+  </section>
+
+  <!-- 7. 回答生成フロー（技術編） -->
+  <section>
+    <h2><span class="num">7</span>回答生成までの流れ（技術編）</h2>
+    <p class="lead">各ステップを、どのAIエンジンが担うかまで含めた詳細です。<b>安いAIに大量の下処理</b>をさせ、<b>賢いAIに最後の仕上げ</b>だけ任せて、品質とコストを両立しています。</p>
+    <div class="pipe">
+      <div class="pnode"><span class="pe codex">Codex</span><div class="pt">① 論点分解</div><div class="pd">1通を論点に分ける</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><span class="pe codex">Codex</span><div class="pt">② 定型マッチ</div><div class="pd">各論点に当てる定型を選ぶ／無ければ「該当なし」と判定</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><span class="pe search">検索</span><div class="pt">③ 過去回答フォールバック</div><div class="pd">定型に無い論点はBM25で過去の良い回答を検索</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><span class="pe db">DB</span><div class="pt">④ 声かけ＋本人文脈</div><div class="pd">論点ごとに声かけを引き、本人の履歴を添える</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><span class="pe claude">Claude</span><div class="pt">⑤ 合成</div><div class="pd">全部を1つの自然な返信に仕上げる</div></div>
+    </div>
+    <div class="engtbl">
+      <div class="eng codex2"><div class="eh">Codex（実行役・安価）</div>論点分解・定型マッチ・イレギュラー検知。大量に回す下処理を担当。</div>
+      <div class="eng claude2"><div class="eh">Claude / Opus（仕上げ役・高品質）</div>最終の合成。良い回答例を量産する「ティーチャー」も兼ね、将来Codexへ移行できる設計。</div>
+    </div>
+    <div class="note">BM25＝キーワードの重なりで過去回答を探す検索方式（文章を2文字ずつに区切って一致度を測る）。<b>「検索を強くする」より「探す相手を、揺らぐ生Q&Aから整理済みの定型に変える」</b>のが精度向上の本筋です。</div>
+  </section>
+
+  <!-- 8. 判断の仕組み -->
+  <section>
+    <h2><span class="num">8</span>判断の仕組み（AIが答える / 人に渡す の線引き）</h2>
+    <p class="lead">すべてをAIが答えるわけではありません。<b>危ういものは自動で人に回す安全弁</b>があります。</p>
+    <div class="judge">
+      <div class="jcard auto">
+        <div class="jh">🤖 AIが回答案を出す</div>
+        <div>定型・過去回答で答えられ、過去履歴と矛盾しない通常の問い合わせ。→ 人はOK/NGを確認するだけ。</div>
+      </div>
+      <div class="jcard human">
+        <div class="jh">🙋 人に渡す（アラート）</div>
+        <div>次のいずれかに当てはまると、AIは断定せず人にエスカレーションします。
+          <ul>
+            <li><b>カテゴリが「人対応必須」</b>（個別性が高く型化できないもの）</li>
+            <li><b>イレギュラー検知</b>：過去に同じ勉強会へ参加済み／面談済み／申告属性の矛盾／解決済みの蒸し返し 等</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="note">「イレギュラー検知」は、本人の過去履歴 × 今回の質問を照らして<b>Codexが異常だけを拾う</b>仕組み（迷ったら人に回す＝安全側に倒す）。要注意ラベルが無くても、システム側で“再調査が必要な人”を見つけられます。</div>
+  </section>
+
+  <!-- 9. DB構造 -->
+  <section>
+    <h2><span class="num">9</span>DBの構造（すべての中心は「生ログ」）</h2>
+    <p class="lead">方針は<b>「全件をまず生ログで溜め、後からSQLで抽出する」</b>。土台が揺らがないので、抽出ルールやナレッジを後から何度でも作り直せます。</p>
+    <div class="dbmap">
+      <div class="dbhub">
+        <div class="dbt">chat_messages</div>
+        <div class="dbn">31.8万件</div>
+        <div class="dbc">LINEの全やりとり（生ログ・中心ハブ）</div>
+      </div>
+      <div class="dbcols">
+        <div class="dbgroup">
+          <div class="gl">抽出（自動）</div>
+          <div class="dbbox"><b>pending_replies</b><span>要回答キュー 687</span></div>
+          <div class="dbbox"><b>qa_pairs</b><span>過去のQ&A 2,274</span></div>
+        </div>
+        <div class="dbgroup">
+          <div class="gl">ナレッジ（二軸＋公式）</div>
+          <div class="dbbox teikei"><b>knowledge</b><span>定型骨格 198</span></div>
+          <div class="dbbox koe"><b>koekake_knowledge</b><span>声かけ 8</span></div>
+          <div class="dbbox teikei"><b>official_templates</b><span>公式テンプレ 342</span></div>
+        </div>
+        <div class="dbgroup">
+          <div class="gl">検索・評価</div>
+          <div class="dbbox"><b>embeddings</b><span>ベクトル 1,270</span></div>
+          <div class="dbbox"><b>eval_*</b><span>精度測定の記録</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">SQLite（ファイル1個・ローカル）。生ログ→抽出→ナレッジ→検索→評価が1つのDBに揃い、毎朝の自動取得で chat_messages が最新化されます。<b>friends / accounts</b>（読者・アカウント情報）も同じDBに保持し、本人文脈の材料にしています。</div>
+  </section>
+
+  <!-- 10. 現状 -->
+  <section>
+    <h2><span class="num">10</span>いまの土台（実データ）</h2>
+    <div class="stats">
+      <div class="stat"><div class="n">31.8万</div><div class="l">蓄積メッセージ</div></div>
+      <div class="stat"><div class="n">342</div><div class="l">公式テンプレ（正解データ）</div></div>
+      <div class="stat"><div class="n">198</div><div class="l">蒸留した定型骨格</div></div>
+      <div class="stat"><div class="n">毎朝6:00</div><div class="l">自動で最新取得・生成</div></div>
+    </div>
+    <div class="note">データ収集→論点分解→ナレッジ照合→合成→シート反映までを自動化済み。毎朝、最新の問い合わせでデモシートが更新されます。</div>
+    <p style="text-align:center;margin-top:18px;">
+      <a class="cta" href="https://docs.google.com/spreadsheets/d/1C998JSAC5nOKWKujPMGzlMgkj1-DbALPlzAo0JNp1MY/edit" target="_blank">▶ デモシートを開く</a>
+    </p>
+  </section>
+
+  <footer>リモラボ マーケ部 ｜ LINE自動回答プロジェクト ｜ 説明資料</footer>
+</div>
+</body>
+</html>
