@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTAGE API利用制限とテスト運用スケジュール</title>
+<style>
+  :root{
+    --bg:#101420; --panel:#171d2b; --panel2:#20283a; --line:#303a52;
+    --ink:#f2f5ff; --sub:#b4bed4; --muted:#7f8aa3;
+    --blue:#5b95ff; --green:#38c487; --amber:#f1b653; --red:#ff7676; --purple:#a985ff;
+    --chip:#252e43;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,#0c101b 0%,#101420 42%,#121827 100%);
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  nav{position:sticky;top:0;z-index:20;background:rgba(12,16,27,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 22px}
+  nav b{font-size:13px;color:var(--blue);letter-spacing:.06em;margin-right:6px}
+  nav a{font-size:12.5px;color:var(--sub);text-decoration:none;padding:5px 10px;border-radius:8px;white-space:nowrap}
+  nav a:hover{background:var(--chip);color:var(--ink)}
+  header{padding:54px 0 34px}
+  .kicker{color:var(--blue);font-size:13px;font-weight:700;letter-spacing:.14em}
+  h1{font-size:34px;line-height:1.28;margin:10px 0 8px}
+  h1 small{display:block;color:var(--sub);font-size:16px;font-weight:500;margin-top:8px}
+  .meta{color:var(--muted);font-size:13px;margin-top:12px}
+  .summary{
+    margin-top:18px;
+    background:linear-gradient(90deg,rgba(91,149,255,.15),rgba(56,196,135,.09));
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:17px 20px;
+    color:var(--sub);
+    font-size:14px;
+  }
+  .summary b{color:var(--ink)}
+  section{padding:30px 0;border-top:1px solid var(--line)}
+  h2{font-size:23px;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+  h2 .no{font-size:13px;color:var(--blue);border:1px solid var(--blue);border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .lead{margin:4px 0 18px;color:var(--sub);font-size:15px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:840px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .card h3{font-size:15.5px;margin:0 0 6px}
+  .card p{font-size:13.5px;color:var(--sub);margin:0}
+  .card ul{margin:8px 0 0;padding-left:20px}
+  .card li{font-size:13.5px;color:var(--sub);margin:5px 0}
+  .card b,.card li b{color:var(--ink)}
+  .blue{border-left:4px solid var(--blue)}
+  .green{border-left:4px solid var(--green)}
+  .amber{border-left:4px solid var(--amber)}
+  .red{border-left:4px solid var(--red)}
+  .purple{border-left:4px solid var(--purple)}
+  .notice{border-radius:12px;padding:14px 16px;font-size:13.5px;margin-top:14px;border:1px solid var(--line);background:rgba(91,149,255,.08);color:#c9d9ff}
+  .notice.warn{background:rgba(241,182,83,.08);border-color:#55401f;color:#f4d9a6}
+  .notice.danger{background:rgba(255,118,118,.08);border-color:#5a3030;color:#ffc8c8}
+  .notice.ok{background:rgba(56,196,135,.08);border-color:#24543f;color:#baf0d7}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px;overflow:hidden;border-radius:12px}
+  th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+  th{background:var(--panel2);color:var(--sub);font-size:12.5px;font-weight:700}
+  td{background:rgba(23,29,43,.72)}
+  tr:last-child td{border-bottom:none}
+  .pill{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;border:1px solid var(--line);background:var(--chip);color:var(--sub);margin:3px 4px 3px 0}
+  .pill.b{color:#c8dcff;border-color:#355891}
+  .pill.g{color:#b4f1d8;border-color:#2d6b51}
+  .pill.a{color:#f8d79d;border-color:#6d5125}
+  .flow{display:flex;gap:0;align-items:stretch;flex-wrap:wrap;margin-top:10px}
+  .step{flex:1;min-width:165px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .step .t{font-size:11px;color:var(--blue);font-weight:700;letter-spacing:.08em}
+  .step .h{font-weight:700;font-size:14.5px;margin:3px 0 5px}
+  .step .d{font-size:12.5px;color:var(--sub)}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:22px;padding:0 7px}
+  @media(max-width:840px){.arrow{width:100%;transform:rotate(90deg);padding:4px 0}}
+  .tl{border-left:2px solid var(--line);padding-left:24px;margin-left:8px}
+  .tl .it{position:relative;padding:0 0 20px}
+  .tl .it::before{content:"";position:absolute;left:-31px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(91,149,255,.15)}
+  .tl .it.done::before{background:var(--green);box-shadow:0 0 0 4px rgba(56,196,135,.15)}
+  .tl .it.now::before{background:var(--amber);box-shadow:0 0 0 4px rgba(241,182,83,.16)}
+  .tl .it.future::before{background:var(--purple);box-shadow:0 0 0 4px rgba(169,133,255,.15)}
+  .dt{font-size:12.5px;font-weight:700;color:var(--blue)}
+  .it.done .dt{color:var(--green)}
+  .it.now .dt{color:var(--amber)}
+  .it.future .dt{color:var(--purple)}
+  .ti{font-size:15px;font-weight:700;margin:2px 0}
+  .ds{font-size:13.5px;color:var(--sub)}
+  .script{
+    background:#0d111b;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    color:#dfe6f8;
+    font-size:14px;
+  }
+  .script p{margin:0 0 10px}
+  .script p:last-child{margin-bottom:0}
+  code{background:#0d111b;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#dfe6f8}
+  footer{border-top:1px solid var(--line);padding:34px 0 58px;color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <b>UTAGE API</b>
+  <a href="#today">今日の説明</a>
+  <a href="#limit">利用制限</a>
+  <a href="#policy">取得方針</a>
+  <a href="#format">LINEチーム連携</a>
+  <a href="#roadmap">スケジュール</a>
+  <a href="#talk">話す文面</a>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="kicker">リモラボ マーケ部 ｜ LINE自動回答プロジェクト</div>
+  <h1>UTAGE API利用制限と<br>テスト運用スケジュール
+    <small>API枠を守りながら、定時取得・ローカルSQL・人レビューで進める</small>
+  </h1>
+  <div class="meta">2026/06/26 MTG資料 ｜ 対象：LINE自動回答システム ｜ 前提：UTAGE APIはアカウント共有枠</div>
+  <div class="summary">
+    <b>今日伝えたい結論：</b>
+    UTAGE APIは「APIキーごと」ではなく、<b>1つのUTAGEアカウント全体で利用制限を共有</b>する。
+    自動回答だけで使い切れる枠ではないため、必要なデータを定時で取得してSQLに蓄積し、回答生成時は基本的にローカルDBを読む方式にする。
+  </div>
+</div></header>
+
+<section id="today"><div class="wrap">
+  <h2><span class="no">1</span>今日の説明ポイント</h2>
+  <p class="lead">APIをたくさん叩く設計ではなく、限られた枠を全体で有効に使う設計にする。</p>
+  <div class="grid g3">
+    <div class="card blue"><h3>API枠はアカウント共有</h3><p>1つのUTAGEアカウントに対して1日の利用制限がかかる。複数のAPIキーを発行しても、利用枠は分離されない。</p></div>
+    <div class="card green"><h3>回答時はDBを優先</h3><p>毎回UTAGEから全データを取り直さず、定時取得したデータをSQLに入れて、回答生成ではDBから必要情報を読む。</p></div>
+    <div class="card amber"><h3>個人情報はローカル管理</h3><p>SQLには個人情報が入るため、クラウドには置かず、Mac miniのローカルに置く前提で進める。</p></div>
+  </div>
+  <div class="notice warn">
+    補足：1分単位の残量はレスポンスヘッダで確認できる一方、1日単位の残量は現状APIから確認できない。つまり「今日あと何回使えるか」は自前で記録する必要がある。
+  </div>
+</div></section>
+
+<section id="limit"><div class="wrap">
+  <h2><span class="no">2</span>UTAGE API利用制限の前提</h2>
+  <p class="lead">今回の自動回答は、UTAGE APIを「共有資源」として扱う必要がある。</p>
+  <table>
+    <tr><th>項目</th><th>現状わかっていること</th><th>運用上の意味</th></tr>
+    <tr>
+      <td><b>制限の単位</b></td>
+      <td>1つのUTAGEアカウント全体で共有。APIキーを複数発行しても枠は共通。</td>
+      <td>自動回答、他ツール、他担当者のAPI利用が同じ枠を使う。</td>
+    </tr>
+    <tr>
+      <td><b>1分あたり</b></td>
+      <td>レスポンスヘッダで上限・残量を確認できる。</td>
+      <td>短時間に大量実行しない限り、今回の主なボトルネックにはなりにくい。</td>
+    </tr>
+    <tr>
+      <td><b>1日あたり</b></td>
+      <td>日次上限があるが、日次残量はヘッダや取得APIでは見えない。</td>
+      <td>自分たちでAPI呼び出し回数を記録し、消費量を管理する。</td>
+    </tr>
+    <tr>
+      <td><b>1カウントの基準</b></td>
+      <td>API 1コールを1回として扱う。取得件数ではなく呼び出し回数が基準。</td>
+      <td>取得時は<code>per_page=100</code>など、1回で多く取る設計が効率的。</td>
+    </tr>
+  </table>
+  <div class="notice danger">
+    リスク：他の人や他ツールが同じ日にAPIを多く使うと、自動回答側では残量が見えないまま急に上限に当たる可能性がある。
+  </div>
+</div></section>
+
+<section id="policy"><div class="wrap">
+  <h2><span class="no">3</span>今回の取得方針</h2>
+  <p class="lead">「使うたびに取りに行く」ではなく、「定時に必要分だけ取り込む」方式にする。</p>
+  <div class="flow">
+    <div class="step"><div class="t">SCHEDULE</div><div class="h">定時実行</div><div class="d">夜間または低負荷時間帯に、必要な差分だけUTAGE APIから取得する。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="t">COLLECT</div><div class="h">差分取得</div><div class="d">友だち情報、チャット履歴、ラベル、流入情報などを更新分中心に取る。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="t">STORE</div><div class="h">SQLへ保存</div><div class="d">Mac miniのローカルDBに蓄積。クラウドには置かない。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="t">ANSWER</div><div class="h">回答生成</div><div class="d">AIはDBを参照し、過去履歴・ラベル・似た質問を踏まえて回答案を作る。</div></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="t">REVIEW</div><div class="h">人が確認</div><div class="d">LINEチームが確認・修正・送信。採用率と修正理由を蓄積する。</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card green"><h3>この方式のメリット</h3>
+      <ul>
+        <li><b>API消費を最小化</b>できる</li>
+        <li>回答生成時の速度が安定する</li>
+        <li>過去回答を横断検索しやすくなる</li>
+        <li>採用率・不採用理由をあとから分析できる</li>
+      </ul>
+    </div>
+    <div class="card amber"><h3>守るルール</h3>
+      <ul>
+        <li><b>APIキーは処理マシンに置く</b>。人に配らない</li>
+        <li>SQL本体はMac miniローカル管理</li>
+        <li>外部共有する出力は必要最小限にする</li>
+        <li>429や上限到達時は停止せずログで検知する</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<section id="format"><div class="wrap">
+  <h2><span class="no">4</span>LINEチームに下ろすフォーマット</h2>
+  <p class="lead">テスト運用では、既存の返信チェックリストに近い形で出す。現場の動きを大きく変えない。</p>
+  <table>
+    <tr><th>項目</th><th>AI/システムが出す内容</th><th>LINEチームが見るポイント</th></tr>
+    <tr><td><b>受信メッセージ</b></td><td>読者から届いた本文。必要に応じて直近履歴も添える。</td><td>質問の意図が正しく拾えているか。</td></tr>
+    <tr><td><b>カテゴリ</b></td><td>日程、Zoom、特典、個別相談、見送り、不安相談など。</td><td>自動化できるカテゴリか、人対応に回すべきか。</td></tr>
+    <tr><td><b>論点</b></td><td>1通の中で答えるべきポイントを分解して表示。</td><td>抜け漏れがないか。</td></tr>
+    <tr><td><b>参照した根拠</b></td><td>過去回答、定型文、ラベル、直近履歴など。</td><td>回答案の根拠が妥当か。</td></tr>
+    <tr><td><b>AI回答案</b></td><td>そのまま送れる文面に近い下書き。</td><td>修正して送る／人対応にする／送らない、を判断。</td></tr>
+    <tr><td><b>採用結果</b></td><td>採用、修正採用、不採用、人対応、返信不要。</td><td>1〜2か月の分析用データとして残す。</td></tr>
+    <tr><td><b>修正理由</b></td><td>足りない情報、トーン違い、事実確認不足など。</td><td>AI改善と自動化可否の判断材料にする。</td></tr>
+  </table>
+  <div class="notice ok">
+    目標：LINEチームには「AIが考えた理由が見える回答案」として渡す。単なる返信文だけを渡さず、なぜその回答になったかを確認できる形にする。
+  </div>
+</div></section>
+
+<section id="roadmap"><div class="wrap">
+  <h2><span class="no">5</span>スケジュール</h2>
+  <p class="lead">2026/06/26時点では、6/25までの確認事項を踏まえて、7/5のテスト実装に進む段階。</p>
+  <div class="tl">
+    <div class="it done">
+      <div class="dt">〜2026/06/25</div>
+      <div class="ti">API仕様・カウント基準・連携フォーマットの整理</div>
+      <div class="ds">APIの仕様確認、回数のカウント基準、LINEチームに下ろす際のフォーマット決め。日次残量が見えない前提もここで整理。</div>
+    </div>
+    <div class="it now">
+      <div class="dt">2026/06/26 今日</div>
+      <div class="ti">API利用制限とDB方針の共有</div>
+      <div class="ds">UTAGE APIはアカウント共有枠であること、定時取得してSQLに入れること、個人情報はMac miniローカルで管理することを合意する。</div>
+    </div>
+    <div class="it">
+      <div class="dt">〜2026/07/05</div>
+      <div class="ti">テスト実装</div>
+      <div class="ds">定時取得、ローカルSQL保存、回答案生成、チェックリスト出力、採用結果の記録までを一通り動く形にする。</div>
+    </div>
+    <div class="it future">
+      <div class="dt">2026/07/06〜 約1〜2か月</div>
+      <div class="ti">テスト運用・情報蓄積</div>
+      <div class="ds">LINEチームで目視確認しながら運用。採用率、修正理由、返信不要、人対応カテゴリを蓄積し、自動化できる範囲を見極める。</div>
+    </div>
+  </div>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card blue"><h3>7/5までの成果物</h3><p>API取得、SQL保存、回答案生成、出力フォーマットのテスト版。</p></div>
+    <div class="card green"><h3>7/6以降に見る指標</h3><p>下書き採用率、修正採用率、不採用理由、カテゴリ別の人対応率。</p></div>
+    <div class="card purple"><h3>判断タイミング</h3><p>1〜2か月の蓄積後、安全に任せられるカテゴリから自動化範囲を広げる。</p></div>
+  </div>
+</div></section>
+
+<section id="talk"><div class="wrap">
+  <h2><span class="no">6</span>MTGで話す文面</h2>
+  <p class="lead">そのまま読み上げられるように、話し言葉寄りに整えたもの。</p>
+  <div class="script">
+    <p>UTAGEのAPI利用制限について共有します。UTAGEのAPIは、APIキーごとではなく、1つのUTAGEアカウント全体に対して1日の利用制限がかかる形です。</p>
+    <p>つまり、APIキーを複数発行していても、自動回答だけで専用の枠を持てるわけではありません。同じUTAGEアカウントでAPIを使っている人やツールがあれば、すべて同じ枠を共有することになります。</p>
+    <p>また、1分あたりの残量はヘッダで確認できますが、1日の残量は現状APIから確認できません。そのため、今回の自動回答ではAPIを都度たくさん叩くのではなく、定時で必要なデータを取得し、SQLに保存する方式で進めたいと考えています。</p>
+    <p>回答生成時は、UTAGE APIへ毎回取りに行くのではなく、基本的にはSQLに蓄積したデータを参照します。これにより、APIの利用回数を抑えながら、過去のやりとりやラベル、過去回答を踏まえた回答案を作れるようにします。</p>
+    <p>SQLには個人情報が入るため、クラウドには置かず、Mac miniのローカルに置く前提です。外部に共有するのは、LINEチームが確認するために必要な出力だけに絞ります。</p>
+    <p>スケジュールとしては、6月25日までにAPI仕様、回数のカウント基準、LINEチームに下ろすフォーマットを整理し、7月5日までにテスト実装。7月6日以降、1〜2か月ほどテスト運用しながら採用率や修正理由を蓄積して、自動化できる範囲を判断していく流れです。</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  リモラボ マーケ部 ｜ UTAGE LINE 自動回答プロジェクト<br>
+  参照：<code>UTAGE_APIレート制限.md</code>、<code>MTG/次回MTG_確認事項.md</code>
+</div></footer>
+
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINE自動回答システム ｜ DB説明と今後の展開</title>
+<style>
+  :root{
+    --bg:#0f1226; --panel:#171a35; --panel2:#1e2240; --line:#2c3160;
+    --ink:#eef0ff; --sub:#a8adda; --muted:#7b80b5;
+    --blue:#4f8cff; --green:#36c08a; --gray:#8a90b8; --purple:#a679f0; --amber:#f3b14e; --red:#ff6b6b;
+    --chip:#262b54;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:linear-gradient(180deg,#0c0f22,#0f1226 40%);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(12,15,34,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 22px}
+  nav b{color:var(--blue);margin-right:8px;font-size:14px;letter-spacing:.04em}
+  nav a{color:var(--sub);text-decoration:none;font-size:12.5px;padding:5px 10px;border-radius:8px;white-space:nowrap}
+  nav a:hover{background:var(--chip);color:var(--ink)}
+  /* hero */
+  header{padding:54px 0 30px}
+  .kicker{color:var(--blue);font-weight:700;letter-spacing:.14em;font-size:13px}
+  h1{font-size:34px;margin:10px 0 6px;line-height:1.3}
+  h1 small{display:block;font-size:16px;color:var(--sub);font-weight:500;margin-top:8px}
+  .meta{color:var(--muted);font-size:13px;margin-top:14px}
+  /* section */
+  section{padding:30px 0;border-top:1px solid var(--line)}
+  h2{font-size:23px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  h2 .no{font-size:13px;color:var(--blue);border:1px solid var(--blue);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .lead{color:var(--sub);margin:6px 0 18px;font-size:15px}
+  /* cards */
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .card h3{margin:0 0 6px;font-size:15.5px}
+  .card p{margin:0;color:var(--sub);font-size:13.5px}
+  .card.blue{border-left:4px solid var(--blue)}.card.green{border-left:4px solid var(--green)}
+  .card.gray{border-left:4px solid var(--gray)}.card.purple{border-left:4px solid var(--purple)}
+  .card.amber{border-left:4px solid var(--amber)}.card.red{border-left:4px solid var(--red)}
+  /* stat */
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+  .stat .n{font-size:30px;font-weight:800;color:var(--blue)}
+  .stat .n.g{color:var(--green)}.stat .n.p{color:var(--purple)}.stat .n.a{color:var(--amber)}
+  .stat .l{font-size:12.5px;color:var(--sub);margin-top:2px}
+  /* chips */
+  .chip{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:12.5px;color:var(--sub);margin:3px 4px 3px 0}
+  .chip.b{color:#bcd4ff;border-color:#33508f}.chip.g{color:#a9f0d2;border-color:#2c6b52}
+  .chip.r{color:#ffc2c2;border-color:#7a3636}.chip.p{color:#dcc6ff;border-color:#5a3f8f}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px;overflow:hidden;border-radius:12px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--panel2);color:var(--sub);font-weight:600;font-size:12.5px}
+  td{color:var(--ink)}
+  tr:last-child td{border-bottom:none}
+  td .s{color:var(--muted);font-size:12px}
+  /* flow */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-top:8px}
+  .step{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 14px;position:relative}
+  .step .t{font-size:11px;color:var(--blue);font-weight:700;letter-spacing:.06em}
+  .step .h{font-size:14.5px;font-weight:700;margin:3px 0 4px}
+  .step .d{font-size:12.5px;color:var(--sub)}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:22px;padding:0 6px}
+  @media(max-width:820px){.arrow{transform:rotate(90deg);padding:4px 0;width:100%}}
+  .badge{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:6px;margin-top:6px;font-weight:700}
+  .badge.man{background:#3a2b12;color:var(--amber)}.badge.auto{background:#123a2a;color:var(--green)}
+  /* timeline */
+  .tl{position:relative;margin-left:8px;padding-left:24px;border-left:2px solid var(--line)}
+  .tl .it{position:relative;padding:0 0 18px}
+  .tl .it::before{content:"";position:absolute;left:-31px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 4px rgba(79,140,255,.15)}
+  .tl .it.done::before{background:var(--green);box-shadow:0 0 0 4px rgba(54,192,138,.15)}
+  .tl .it.future::before{background:var(--purple);box-shadow:0 0 0 4px rgba(166,121,240,.15)}
+  .tl .dt{font-size:12px;color:var(--blue);font-weight:700}
+  .tl .it.done .dt{color:var(--green)}.tl .it.future .dt{color:var(--purple)}
+  .tl .ti{font-size:15px;font-weight:700;margin:2px 0}
+  .tl .ds{font-size:13px;color:var(--sub)}
+  /* misc */
+  .note{background:rgba(243,177,78,.08);border:1px solid #4a3a1a;border-radius:12px;padding:13px 16px;font-size:13.5px;color:#f6d9a6}
+  .ok{background:rgba(54,192,138,.08);border:1px solid #1f5240;color:#aef0d4}
+  .danger{background:rgba(255,107,107,.07);border:1px solid #5a2a2a;color:#ffc6c6}
+  ul.tight{margin:8px 0 0;padding-left:20px}ul.tight li{margin:5px 0;color:var(--sub);font-size:13.5px}
+  ul.tight li b{color:var(--ink)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--sub);margin-top:10px}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:middle}
+  a.link{color:var(--blue);text-decoration:none;border-bottom:1px dotted #33508f}
+  footer{padding:40px 0 60px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line)}
+  .hl{color:var(--ink);font-weight:700}
+  .kpi-banner{background:linear-gradient(90deg,rgba(79,140,255,.14),rgba(166,121,240,.10));border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:8px}
+  .kpi-banner b{color:var(--blue)}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <b>LINE自動回答</b>
+  <a href="#aim">①目的</a>
+  <a href="#now">②今の仕組み</a>
+  <a href="#api">③APIで取れる情報</a>
+  <a href="#db">④なぜDBが必要か</a>
+  <a href="#flow">⑤運用フロー</a>
+  <a href="#road">⑥今後の展開</a>
+  <a href="#todo">⑦宿題</a>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="kicker">リモラボ マーケ部 ｜ UTAGE LINE 自動回答プロジェクト</div>
+  <h1>LINE自動回答システム<br>DBの説明と今後の展開
+    <small>紺（広告）アカウントで先行構築 → 全アカウント横展開</small>
+  </h1>
+  <div class="meta">2026/06/26 MTG 資料　｜　作成：高橋（にこったま）　｜　対象アカウント：紺/広告 @158nkyap</div>
+  <div class="kpi-banner">
+    <b>このプロジェクトの一番の目的</b> ＝ クリティカルな問い合わせへ<span class="hl">迅速対応して取りこぼしを減らす（KPI改善）</span>。
+    AIで回答を効率化し、ラインチームの負担を軽くする。<br>
+    <span style="color:var(--sub);font-size:13px">※コスト削減は「欲を言えば」の上振れ。まずは取りこぼしゼロが最低ライン。いきなり全自動ではなく、<b style="color:#f6d9a6">人の目をワンクッション</b>挟んで段階導入する。</span>
+  </div>
+</div></header>
+
+<!-- ① 目的 -->
+<section id="aim"><div class="wrap">
+  <h2><span class="no">1</span>目的とスタンス</h2>
+  <p class="lead">「全自動化」がゴールではない。<b>事故を起こさず、取りこぼしを減らす</b>ことが先。</p>
+  <div class="grid g3">
+    <div class="card green"><h3>① 取りこぼし削減（最低ライン）</h3><p>クリティカルな問い合わせを優先検知し迅速対応。KPIに直結。コストは変わらなくてもまずここ。</p></div>
+    <div class="card blue"><h3>② 負担軽減・効率化</h3><p>AIが回答案を先に作る → 人は「確認して送るだけ」。1件あたりの作成時間を短縮。</p></div>
+    <div class="card purple"><h3>③ コスト削減（上振れ）</h3><p>自動化が進めばシフトに余白が生まれる。これは結果論で、最初から狙わない。</p></div>
+  </div>
+  <div class="note" style="margin-top:14px">⚠️ <b>CSは必ず人の手をワンクッション。</b>誤送信は取り返しがつかないため、当面は「送信の自動化」ではなく「<b>回答作成の効率化</b>」に絞る。自動送信はカテゴリ単位で安全が確認できたものから段階的に。</div>
+</div></section>
+
+<!-- ② 今の仕組み -->
+<section id="now"><div class="wrap">
+  <h2><span class="no">2</span>今の仕組み（UTAGEを中心に動いている）</h2>
+  <p class="lead">読者は各シナリオ（講座別ナーチャリング＋勉強会＋個別相談）に乗り、LINEでやりとりが発生する。</p>
+  <div class="grid g4">
+    <div class="stat"><div class="n">37</div><div class="l">シナリオ（紺）</div></div>
+    <div class="stat"><div class="n">326</div><div class="l">配信メッセージ</div></div>
+    <div class="stat"><div class="n">6,303</div><div class="l">友だち</div></div>
+    <div class="stat"><div class="n">280,970</div><div class="l">蓄積メッセージ</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card blue"><h3>自動で回っている部分（青・灰）</h3><p>シナリオ配信・ステップ・ボタン操作・勉強会リマインダ（33通）など。<b>ここは既に自動</b>で、今回の自動回答の対象外。</p></div>
+    <div class="card green"><h3>人が手で対応している部分（緑）= 今回の主戦場</h3><p>読者からの個別の質問・相談に、サポートが<b>手動で返信</b>している部分。ここをAIで効率化する。</p></div>
+  </div>
+  <p style="margin-top:14px;font-size:13.5px;color:var(--sub)">📊 構造の全体像はMiro図で可視化済み：
+    <a class="link" href="https://miro.com/app/board/uXjVHDjWAxc=/" target="_blank">①概要</a> ／
+    <a class="link" href="https://miro.com/app/board/uXjVHDincPg=/" target="_blank">②詳細</a> ／
+    <a class="link" href="https://miro.com/app/board/uXjVHDjWA_U=/" target="_blank">③全37シナリオ実データ</a>
+  </p>
+</div></section>
+
+<!-- ③ API -->
+<section id="api"><div class="wrap">
+  <h2><span class="no">3</span>APIで取れる情報・できること</h2>
+  <p class="lead">UTAGEのAPI拡張で、LINEの中身がプログラムから取得できるようになった（実機で全て確認済み）。</p>
+  <table>
+    <tr><th>取れるもの</th><th>内容</th><th>自動回答での使い道</th></tr>
+    <tr><td><b>友だち情報</b><div class="s">/line/friends</div></td><td>全6,303人。フレンドID・登録名など</td><td>誰からの問い合わせかを特定する起点</td></tr>
+    <tr><td><b>チャット履歴</b><div class="s">friends/{id}/messages</div></td><td>受信・送信の全メッセージ（テキスト/スタンプ/画像/ボタン）</td><td><b>過去のやりとりを遡ってAIに読ませる</b>＝背景を踏まえた回答</td></tr>
+    <tr><td><b>ラベル</b><div class="s">labels</div></td><td>「個別相談済み」「面談予約あり」等の状態</td><td><b>対応中の人には自動返信を止める</b>判定に使う</td></tr>
+    <tr><td><b>読者・流入</b><div class="s">/readers</div></td><td>トラッキング名・流入経路</td><td>どの企画から来た人か。回答の文脈づけ</td></tr>
+    <tr><td><b>送信</b><div class="s">chat_message_send</div></td><td>LINEメッセージを送れる</td><td>※技術的には可能だが<b>当面は使わない</b>（人が送信）</td></tr>
+  </table>
+  <div class="danger" style="margin-top:14px;border-radius:12px;padding:13px 16px">
+    ⚠️ <b>制約：APIにはリクエスト数制限がある。</b>「全件を毎回取得」は枠を食う。1リクエスト=100件取得なので、
+    <b>初回に全件をDBへ取り込み、以降は差分（新着のみ）を取る</b>のが正解。
+    <span style="color:var(--sub)">※「何を1リクエストと数えるか／1日の上限」は次回までに最終確認（後述の宿題）。</span>
+  </div>
+</div></section>
+
+<!-- ④ DB -->
+<section id="db"><div class="wrap">
+  <h2><span class="no">4</span>なぜDB（データベース）が必要か</h2>
+  <p class="lead">結論：<b>個別の回答だけ</b>ならDBなしでも作れる。でも<b>「良い回答を学び」「分析する」</b>には必須。</p>
+
+  <div class="grid g2">
+    <div class="card gray"><h3>DBなし（都度API取得）でできること</h3>
+      <p>問い合わせが来たら、その人の履歴だけAPIで取って回答案を作る。<b>1人分の文脈なら、これで足りる。</b></p>
+      <p style="margin-top:8px;color:var(--muted)">→ 限界：その人が<b>初めてする質問</b>には手本がゼロ。横断の分析もできない。</p>
+    </div>
+    <div class="card green"><h3>DBあり（蓄積）で初めてできること</h3>
+      <ul class="tight">
+        <li><b>質問で横断</b>：「Zoom音声が出ない」を<b>全員ぶん集めて</b>、過去の回答50通りを手本にできる</li>
+        <li><b>採用率・不採用理由の分析</b>：カテゴリ単位で集計し、自動化できる領域を見極める</li>
+        <li><b>常に最新</b>：差分取り込みで、聞かれた瞬間に最新の手本が揃う</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin:22px 0 6px;font-size:16px">「横断」には2種類ある</h3>
+  <table>
+    <tr><th>束ねる軸</th><th>例</th><th>効くこと</th><th>必要なもの</th></tr>
+    <tr><td><b>① 人で横断</b></td><td>Aさんが講座1にも10にもいる。全部1人として束ねる</td><td>人物理解・面談予約・属性分析</td><td>共通読者ID統合</td></tr>
+    <tr><td style="color:var(--green)"><b>② 質問で横断</b></td><td>「Zoom音声」を全員ぶん集め、過去回答を手本に</td><td><b>回答生成・採用率分析（今回の本命）</b></td><td>カテゴリ＋回答の蓄積</td></tr>
+  </table>
+
+  <h3 style="margin:22px 0 6px;font-size:16px">いまDBに溜まっているもの</h3>
+  <div class="grid g4">
+    <div class="stat"><div class="n">2,274</div><div class="l">Q&Aペア（教師データ）</div></div>
+    <div class="stat"><div class="n a">1,041</div><div class="l">人が手で対応した回答</div></div>
+    <div class="stat"><div class="n p">596</div><div class="l">ステップ配信（対象外）</div></div>
+    <div class="stat"><div class="n g">236</div><div class="l">定型サポート回答</div></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--amber)"></i>手動回答 805</span>
+    <span><i style="background:var(--green)"></i>定型 236</span>
+    <span><i style="background:var(--purple)"></i>ステップ配信 596</span>
+    <span><i style="background:var(--gray)"></i>bot自動 38</span>
+    <span><i style="background:var(--muted)"></i>個別返信なし 599</span>
+  </div>
+
+  <div class="note" style="margin-top:18px">
+    🔐 <b>DBを持つリスクと対策（正直に）</b><br>
+    最大のリスクは「個人情報のコピーを1つ増やす」こと。守るべきは2点だけ：
+    <ul class="tight" style="color:#f6d9a6">
+      <li><b>APIキーの管理</b>：UTAGEキーは<b>スコープを分けられないフルアクセス1本</b>（＝読みも送信も全部できる）。漏れたら管理画面で<b>無効化→再発行</b>できる。鍵は人に配らず、処理マシンに置く。</li>
+      <li><b>DB本体の置き場所</b>：社外に出さない・共有しない。出力（スプシ等）はIDベースで、社外共有時のみ氏名を伏せる。</li>
+    </ul>
+    <span style="color:var(--sub);font-size:12.5px">※「復旧用バックアップ」は理由にしない（マスターはUTAGE側）。DBの価値は<b>横断分析と学習</b>。</span>
+  </div>
+</div></section>
+
+<!-- ⑤ 運用フロー -->
+<section id="flow"><div class="wrap">
+  <h2><span class="no">5</span>運用にどう乗せるか（現行スプシにそのまま乗る）</h2>
+  <p class="lead">いま使っている<b>返信チェックリスト（📌原本）</b>の流れを変えず、「返信案」をAIが先に埋めるだけ。</p>
+
+  <div class="flow">
+    <div class="step"><div class="t">TRIGGER</div><div class="h">① 受信</div><div class="d">読者からLINEで質問が来る</div><span class="badge auto">自動</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="t">AI</div><div class="h">② 文脈収集</div><div class="d">その人の過去履歴＋ラベルをDBから読む</div><span class="badge auto">自動</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="t">AI</div><div class="h">③ 回答案を生成</div><div class="d">似た質問の過去回答を手本に、カテゴリ＋返信案を出力</div><span class="badge auto">自動</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="t">HUMAN</div><div class="h">④ 目視チェック</div><div class="d">作成者が確認・修正（採用/不採用＋理由）</div><span class="badge man">人</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><div class="t">HUMAN</div><div class="h">⑤ 送信</div><div class="d">OKなら送付。シフトリーダーがFB</div><span class="badge man">人</span></div>
+  </div>
+
+  <h3 style="margin:22px 0 6px;font-size:16px">現行スプシ「📌原本」の列に、AIが書き込む場所をマッピング</h3>
+  <table>
+    <tr><th>📌原本の列</th><th>今</th><th>自動化後</th></tr>
+    <tr><td>メッセージ（受信）</td><td>手で貼る</td><td><b>AIが自動で取り込み</b></td></tr>
+    <tr><td>カテゴリ</td><td>—</td><td><b>AIが自動分類</b>（Zoom操作/日程/特典…）</td></tr>
+    <tr><td>論点思考</td><td>作成者が考える</td><td>AIが論点を提示（参考）</td></tr>
+    <tr><td>返信（案）</td><td>作成者が一から作成</td><td><b>AIが回答案を下書き</b> → 人は確認・微修正</td></tr>
+    <tr><td>確認/質問</td><td>シフトリーダー添削</td><td>そのまま（人の目）。<b>修正＝学習データ</b>に</td></tr>
+    <tr><td>送付済み</td><td>人が送信</td><td>当面は人が送信（自動送信は段階的に）</td></tr>
+  </table>
+
+  <div class="ok" style="margin-top:14px;border-radius:12px;padding:13px 16px">
+    ✅ <b>うまみ：</b>「AIの回答案」と「実際に送った文」「作成者」が1行に並ぶ。
+    その差分が<b>そのまま学習データ＆採用率</b>になる。1〜2ヶ月で「この系はもう自動でいける」とカテゴリ単位に判定できる。
+  </div>
+  <p style="margin-top:10px;font-size:13px;color:var(--muted)">
+    参照：現行スプシ <a class="link" href="https://docs.google.com/spreadsheets/d/1lEGZyGVRPdOrUgfNCkMQrjvxKv97-L00rQB27_YbYcQ/edit" target="_blank">リモラボ_CS_LINEチーム_返信チェックリスト</a>（📌原本タブ）。
+    ※`📋後追いリスト`に既に<b>企画後追いGPTs</b>が使われている＝GPTs資産あり。
+  </p>
+</div></section>
+
+<!-- ⑥ 今後の展開 -->
+<section id="road"><div class="wrap">
+  <h2><span class="no">6</span>今後の展開（スケジュール）</h2>
+  <p class="lead">3段階で進める：<b>調査・設計 → 実装 → テスト運用（1ヶ月蓄積）</b>。</p>
+  <div class="tl">
+    <div class="it done"><div class="dt">〜2026/06/19（済）</div><div class="ti">データ基盤の構築</div>
+      <div class="ds">全28万メッセージをDBへ取り込み・Q&A 2,274件を抽出・カテゴリ分け・現状の可視化（スプシ＋Miro）まで完了。</div></div>
+    <div class="it"><div class="dt">〜2026/06/25</div><div class="ti">第1段階：API調査＋フォーマット設計</div>
+      <div class="ds">リクエスト制限の確定（何が1カウントか／1日上限）。抽出方向の決定。返信チェックリストへの差し込み仕様を固める。</div></div>
+    <div class="it"><div class="dt">〜2026/07/05</div><div class="ti">第2段階：テスト実装</div>
+      <div class="ds">受信→履歴/ラベル取得→回答案生成→📌原本へ出力、の仕組みを実装。モデル使い分け（簡単=Codex／寄り添い=Opus）。</div></div>
+    <div class="it future"><div class="dt">2026/07/06 〜（約1ヶ月）</div><div class="ti">第3段階：テスト運用＋蓄積</div>
+      <div class="ds">まず全員→新井→シフトリーダーの順で目視チェック。採用率と不採用理由を蓄積。安全が確認できたカテゴリから自動送信を検討。</div></div>
+    <div class="it future"><div class="dt">その先</div><div class="ti">横展開・攻めの活用</div>
+      <div class="ds">紺で確立後、ピンク（オーガニック）・紫（アフィリ）へ展開。背景から「追いを送るべき人」提案など攻めの施策へ。赤丸（面談系）・個別相談予約は手動維持。</div></div>
+  </div>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card blue"><h3>次回MTG</h3><p>2026/06/26（木）10:00〜　テーマ：ライン自動化プロジェクト</p></div>
+    <div class="card green"><h3>連絡</h3><p>専用Slackグループで進行（新設済み）</p></div>
+    <div class="card amber"><h3>別件で早期着手</h3><p>コーチミー診断結果の返信自動化（一番自動化しやすい・7月中旬目処）</p></div>
+  </div>
+</div></section>
+
+<!-- ⑦ 宿題 -->
+<section id="todo"><div class="wrap">
+  <h2><span class="no">7</span>次回までの宿題・確認事項</h2>
+  <div class="grid g2">
+    <div class="card amber"><h3>高橋（にこったま）</h3>
+      <ul class="tight">
+        <li><b>APIリクエスト制限の確定</b>：1カウントの定義／1日上限／回答までに空けてよい時間</li>
+        <li>📌原本への差し込み仕様の確定</li>
+        <li>モデル使い分け（Codex / Opus）の検証</li>
+      </ul></div>
+    <div class="card blue"><h3>須貝・新井</h3>
+      <ul class="tight">
+        <li><b>自動/手動のカテゴリ分け判断基準</b>の提供</li>
+        <li>「返信しなくてよいもの」の定義</li>
+        <li>ラインアカウント一覧（Notion）の共有</li>
+      </ul></div>
+    <div class="card green"><h3>運用ルール（全員で確認）</h3>
+      <ul class="tight">
+        <li>ラベル「対応中」の人には<b>自動返信を止める</b>設計でよいか</li>
+        <li>コーチ個別要望が来ている人の扱い</li>
+        <li>即時対応が要るもの（勉強会中のZoom等）の切り分け</li>
+      </ul></div>
+    <div class="card purple"><h3>確認したいこと</h3>
+      <ul class="tight">
+        <li>GPTs（回答作成・企画後追い）の<b>中身/ナレッジ</b>を共有可能か</li>
+        <li>処理マシンの方針（属人化を避ける置き場所）</li>
+        <li>個人情報・キー管理のルール合意</li>
+      </ul></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  リモラボ マーケ部 ｜ UTAGE LINE 自動回答プロジェクト ｜ 紺/広告アカウント先行<br>
+  数値は <code>data/utage_marke.db</code>（2026/06/19時点）に基づく。図解：Miro／詳細スクリプト：<code>scripts/</code>。
+</div></footer>
+
+</body>
+</html>
