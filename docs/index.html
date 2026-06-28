@@ -4,225 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>リモラボ マーケ部 資料トップ</title>
+<title>リモラボ マーケ部 MTG資料</title>
 <style>
-  :root {
-    --bg: #f5f7fb;
-    --paper: #ffffff;
-    --ink: #1f2430;
-    --muted: #667085;
-    --line: #d9e0ea;
-    --navy: #172033;
-    --blue: #2563eb;
-    --green: #15803d;
-    --orange: #b45309;
-    --rose: #be123c;
+  :root{
+    --bg:#101420; --panel:#171d2b; --line:#303a52;
+    --ink:#f2f5ff; --sub:#b4bed4; --blue:#5b95ff;
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
-    color: var(--ink);
-    background: var(--bg);
-    line-height: 1.75;
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:linear-gradient(180deg,#0c101b,#101420);color:var(--ink);
   }
-  header {
-    background: var(--navy);
-    color: #fff;
-    padding: 42px 22px 34px;
-  }
-  .wrap {
-    max-width: 1080px;
-    margin: 0 auto;
-  }
-  .eyebrow {
-    margin: 0 0 8px;
-    color: #b8c2d3;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: .12em;
-  }
-  h1 {
-    margin: 0;
-    font-size: clamp(28px, 4vw, 42px);
-    letter-spacing: 0;
-    line-height: 1.22;
-  }
-  header p {
-    margin: 14px 0 0;
-    max-width: 760px;
-    color: #e6ebf3;
-    font-size: 15px;
-  }
-  main {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 26px 22px 58px;
-  }
-  .summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-  .summary-card {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 14px 16px;
-  }
-  .summary-card b {
-    display: block;
-    font-size: 18px;
-  }
-  .summary-card span {
-    color: var(--muted);
-    font-size: 12.5px;
-  }
-  section {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 20px;
-    margin: 16px 0;
-  }
-  h2 {
-    margin: 0 0 12px;
-    font-size: 19px;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-  .doc {
-    display: block;
-    min-height: 150px;
-    color: inherit;
-    text-decoration: none;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 15px;
-    background: #fff;
-    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
-  }
-  .doc:hover {
-    transform: translateY(-1px);
-    border-color: #b9c6da;
-    box-shadow: 0 8px 22px rgba(23, 32, 51, .08);
-  }
-  .tag {
-    display: inline-block;
-    color: #fff;
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 11px;
-    font-weight: 800;
-    margin-bottom: 9px;
-  }
-  .blue { background: var(--blue); }
-  .green { background: var(--green); }
-  .orange { background: var(--orange); }
-  .rose { background: var(--rose); }
-  .doc h3 {
-    margin: 0 0 7px;
-    font-size: 16px;
-    line-height: 1.42;
-  }
-  .doc p {
-    margin: 0;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .url {
-    display: block;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid #edf1f6;
-    color: #475467;
-    font-size: 12px;
-    word-break: break-all;
-  }
-  .note {
-    color: var(--muted);
-    font-size: 13px;
-    margin: -4px 0 14px;
-  }
-  footer {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 0 22px 34px;
-    color: var(--muted);
-    font-size: 12px;
-  }
-  @media (max-width: 760px) {
-    .summary, .grid { grid-template-columns: 1fr; }
-  }
+  main{width:420px;max-width:90vw;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px}
+  h1{font-size:20px;margin:0 0 8px}
+  p{font-size:13.5px;color:var(--sub);line-height:1.7;margin:0 0 18px}
+  a{display:block;text-decoration:none;color:#fff;background:var(--blue);border-radius:10px;padding:12px 14px;font-weight:700;text-align:center}
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <p class="eyebrow">REMOLABO MARKETING TEAM</p>
-    <h1>資料トップ</h1>
-    <p>UTAGE / LINE自動回答プロジェクトの説明資料をまとめた入口です。MTG時はこのページから各資料へ移動できます。</p>
-  </div>
-</header>
-
 <main>
-  <div class="summary">
-    <div class="summary-card"><b>5</b><span>公開資料</span></div>
-    <div class="summary-card"><b>GitHub Pages</b><span>docs配下から公開</span></div>
-    <div class="summary-card"><b>2026-06-28</b><span>目次更新日</span></div>
-  </div>
-
-  <section>
-    <h2>LINE自動回答</h2>
-    <p class="note">回答生成の考え方、判断フロー、DB構成を説明する資料です。</p>
-    <div class="grid">
-      <a class="doc" href="./auto-reply/decision-flow.html">
-        <span class="tag blue">FLOW</span>
-        <h3>回答生成の判断フロー</h3>
-        <p>30分ごとの取得、過去履歴を使った回答生成、短文判断、未返信/対応済み参考、人判断の改善ループを図解。</p>
-        <span class="url">/auto-reply/decision-flow.html</span>
-      </a>
-      <a class="doc" href="./auto-reply/mechanism.html">
-        <span class="tag green">MECHANISM</span>
-        <h3>LINE自動回答の仕組み</h3>
-        <p>論点分解、定型ナレッジ、声かけナレッジ、回答合成の全体像を説明。</p>
-        <span class="url">/auto-reply/mechanism.html</span>
-      </a>
-      <a class="doc" href="./mtg/20260626/db-roadmap.html">
-        <span class="tag orange">DB</span>
-        <h3>LINE自動回答システム DB説明と今後の展開</h3>
-        <p>DBに何を蓄積し、どのように判断シートや将来の改善につなげるかを整理。</p>
-        <span class="url">/mtg/20260626/db-roadmap.html</span>
-      </a>
-    </div>
-  </section>
-
-  <section>
-    <h2>UTAGE API / テスト運用</h2>
-    <p class="note">UTAGE APIの利用制限やテスト運用スケジュールに関する資料です。</p>
-    <div class="grid">
-      <a class="doc" href="./mtg/20260626/utage-api-schedule.html">
-        <span class="tag rose">MTG</span>
-        <h3>UTAGE API利用制限とテスト運用スケジュール</h3>
-        <p>API制限、テスト運用時の考え方、スケジュールを説明するMTG資料。</p>
-        <span class="url">/mtg/20260626/utage-api-schedule.html</span>
-      </a>
-      <a class="doc" href="./utage-api-limit-20260626.html">
-        <span class="tag blue">SHARE</span>
-        <h3>LINE自動回答 資料</h3>
-        <p>既存の共有用資料ページ。必要に応じてこちらも参照できます。</p>
-        <span class="url">/utage-api-limit-20260626.html</span>
-      </a>
-    </div>
-  </section>
+  <h1>リモラボ マーケ部 MTG資料</h1>
+  <p>資料ページはパスワードで保護されています。</p>
+  <a href="./utage-api-limit-20260626.html">UTAGE API利用制限とテスト運用スケジュール</a>
 </main>
-
-<footer>
-  GitHub Pages: https://mana0612.github.io/utage-mtg-pages/
-</footer>
 </body>
 </html>
